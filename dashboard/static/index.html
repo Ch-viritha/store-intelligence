@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Store Intelligence — Live Dashboard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+
+    header {
+      background: #1e293b;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #334155;
+    }
+    header h1 { font-size: 18px; font-weight: 700; color: #f8fafc; }
+    header .store-badge { background: #6366f1; color: #fff; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+    .status-ok { background: #22c55e; }
+    .status-warn { background: #f59e0b; }
+    .status-error { background: #ef4444; }
+    .live-badge { font-size: 12px; color: #94a3b8; display: flex; align-items: center; gap: 8px; }
+    .pulse { animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; padding: 20px 24px; }
+
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .card h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; margin-bottom: 12px; }
+    .metric-val { font-size: 42px; font-weight: 800; color: #f8fafc; line-height: 1; }
+    .metric-sub { font-size: 13px; color: #64748b; margin-top: 6px; }
+
+    .card.wide { grid-column: span 2; }
+    @media (max-width: 640px) { .card.wide { grid-column: span 1; } }
+
+    .funnel { display: flex; flex-direction: column; gap: 8px; }
+    .funnel-row { display: flex; align-items: center; gap: 10px; }
+    .funnel-label { width: 130px; font-size: 13px; color: #cbd5e1; }
+    .funnel-bar-wrap { flex: 1; background: #0f172a; border-radius: 4px; height: 22px; overflow: hidden; }
+    .funnel-bar { height: 100%; background: #6366f1; border-radius: 4px; transition: width 0.5s ease; display: flex; align-items: center; padding-left: 8px; min-width: 24px; }
+    .funnel-bar span { font-size: 11px; font-weight: 700; color: #fff; }
+    .drop-pct { width: 50px; font-size: 12px; color: #f59e0b; text-align: right; }
+
+    .heatmap { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .heat-cell {
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+      transition: background 0.5s;
+    }
+    .heat-cell .heat-zone { font-size: 10px; color: rgba(255,255,255,0.7); margin-top: 4px; word-break: break-word; }
+
+    .anomaly-list { display: flex; flex-direction: column; gap: 8px; }
+    .anomaly-item {
+      border-left: 3px solid;
+      padding: 10px 12px;
+      border-radius: 0 8px 8px 0;
+      background: #0f172a;
+    }
+    .anomaly-item.CRITICAL { border-color: #ef4444; }
+    .anomaly-item.WARN { border-color: #f59e0b; }
+    .anomaly-item.INFO { border-color: #3b82f6; }
+    .anomaly-type { font-size: 11px; font-weight: 700; margin-bottom: 3px; }
+    .anomaly-desc { font-size: 12px; color: #94a3b8; }
+    .anomaly-action { font-size: 11px; color: #6366f1; margin-top: 4px; font-style: italic; }
+
+    .zone-dwell { display: flex; flex-direction: column; gap: 6px; }
+    .zone-row { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+    .zone-name { width: 120px; color: #cbd5e1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .zone-bar-wrap { flex: 1; background: #0f172a; border-radius: 3px; height: 14px; }
+    .zone-bar { height: 100%; background: #22c55e; border-radius: 3px; transition: width 0.5s; }
+    .zone-val { width: 60px; text-align: right; color: #94a3b8; }
+
+    #last-updated { font-size: 11px; color: #475569; text-align: center; padding: 8px; }
+
+    .no-data { color: #475569; font-size: 13px; font-style: italic; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Store Intelligence <span style="color:#6366f1">Live</span></h1>
+  </div>
+  <div style="display:flex;align-items:center;gap:16px;">
+    <span class="store-badge" id="store-label">ST1008 · Brigade, Bangalore</span>
+    <span class="live-badge">
+      <span class="status-dot status-ok pulse" id="ws-dot"></span>
+      <span id="ws-status">Connecting…</span>
+    </span>
+  </div>
+</header>
+
+<div class="grid">
+
+  <!-- KPI Cards -->
+  <div class="card">
+    <h2>Unique Visitors Today</h2>
+    <div class="metric-val" id="kpi-visitors">—</div>
+    <div class="metric-sub">Customers only · excludes staff</div>
+  </div>
+
+  <div class="card">
+    <h2>Conversion Rate</h2>
+    <div class="metric-val" id="kpi-conversion">—</div>
+    <div class="metric-sub">Billing visits ÷ total visitors</div>
+  </div>
+
+  <div class="card">
+    <h2>Queue Depth</h2>
+    <div class="metric-val" id="kpi-queue">—</div>
+    <div class="metric-sub">Current billing counter</div>
+  </div>
+
+  <div class="card">
+    <h2>Abandonment Rate</h2>
+    <div class="metric-val" id="kpi-abandon">—</div>
+    <div class="metric-sub">Left queue before purchase</div>
+  </div>
+
+  <!-- Funnel -->
+  <div class="card wide">
+    <h2>Conversion Funnel</h2>
+    <div class="funnel" id="funnel-chart">
+      <div class="no-data">Waiting for data…</div>
+    </div>
+  </div>
+
+  <!-- Heatmap -->
+  <div class="card wide">
+    <h2>Zone Heatmap</h2>
+    <div class="heatmap" id="heatmap-grid">
+      <div class="no-data">Waiting for data…</div>
+    </div>
+  </div>
+
+  <!-- Zone Dwell -->
+  <div class="card wide">
+    <h2>Avg Dwell by Zone (seconds)</h2>
+    <div class="zone-dwell" id="zone-dwell">
+      <div class="no-data">Waiting for data…</div>
+    </div>
+  </div>
+
+  <!-- Anomalies -->
+  <div class="card wide">
+    <h2>Active Anomalies</h2>
+    <div class="anomaly-list" id="anomaly-list">
+      <div class="no-data">No anomalies detected</div>
+    </div>
+  </div>
+
+</div>
+<div id="last-updated"></div>
+
+<script>
+  const WS_URL = `ws://${location.host}/ws`;
+  let ws;
+
+  function connect() {
+    ws = new WebSocket(WS_URL);
+    document.getElementById('ws-dot').className = 'status-dot status-warn pulse';
+    document.getElementById('ws-status').textContent = 'Connecting…';
+
+    ws.onopen = () => {
+      document.getElementById('ws-dot').className = 'status-dot status-ok pulse';
+      document.getElementById('ws-status').textContent = 'Live';
+    };
+
+    ws.onmessage = (evt) => {
+      const msg = JSON.parse(evt.data);
+      if (msg.type === 'update' || msg.type === 'snapshot') {
+        render(msg.data);
+      }
+    };
+
+    ws.onclose = () => {
+      document.getElementById('ws-dot').className = 'status-dot status-error';
+      document.getElementById('ws-status').textContent = 'Reconnecting…';
+      setTimeout(connect, 3000);
+    };
+  }
+
+  function render(data) {
+    const now = new Date().toLocaleTimeString();
+    document.getElementById('last-updated').textContent = `Last updated: ${now}`;
+
+    // ── KPIs ──
+    const m = data.metrics;
+    if (m && !m.error) {
+      document.getElementById('kpi-visitors').textContent = m.unique_visitors ?? '—';
+      document.getElementById('kpi-conversion').textContent = m.conversion_rate != null
+        ? (m.conversion_rate * 100).toFixed(1) + '%' : '—';
+      document.getElementById('kpi-queue').textContent = m.current_queue_depth ?? '—';
+      document.getElementById('kpi-abandon').textContent = m.abandonment_rate != null
+        ? (m.abandonment_rate * 100).toFixed(1) + '%' : '—';
+
+      // Zone dwell
+      const dz = document.getElementById('zone-dwell');
+      if (m.avg_dwell_per_zone && m.avg_dwell_per_zone.length > 0) {
+        const maxDwell = Math.max(...m.avg_dwell_per_zone.map(z => z.avg_dwell_ms));
+        dz.innerHTML = m.avg_dwell_per_zone.map(z => {
+          const sec = (z.avg_dwell_ms / 1000).toFixed(1);
+          const w = maxDwell > 0 ? (z.avg_dwell_ms / maxDwell * 100).toFixed(0) : 0;
+          return `<div class="zone-row">
+            <div class="zone-name">${z.zone_id}</div>
+            <div class="zone-bar-wrap"><div class="zone-bar" style="width:${w}%"></div></div>
+            <div class="zone-val">${sec}s · ${z.visit_count}</div>
+          </div>`;
+        }).join('');
+      }
+    }
+
+    // ── Funnel ──
+    const f = data.funnel;
+    if (f && f.stages) {
+      const maxCount = Math.max(...f.stages.map(s => s.count), 1);
+      document.getElementById('funnel-chart').innerHTML = f.stages.map(s => {
+        const w = ((s.count / maxCount) * 100).toFixed(0);
+        const drop = s.drop_off_pct > 0 ? `↓${s.drop_off_pct}%` : '';
+        return `<div class="funnel-row">
+          <div class="funnel-label">${s.stage}</div>
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" style="width:${w}%"><span>${s.count}</span></div>
+          </div>
+          <div class="drop-pct">${drop}</div>
+        </div>`;
+      }).join('');
+    }
+
+    // ── Heatmap ──
+    const hm = data.heatmap;
+    if (hm && hm.zones && hm.zones.length > 0) {
+      document.getElementById('heatmap-grid').innerHTML = hm.zones.map(z => {
+        const intensity = z.visit_frequency / 100;
+        const r = Math.round(30 + intensity * 180);
+        const g = Math.round(30 + (1 - intensity) * 120);
+        const b = Math.round(100 - intensity * 60);
+        const bg = `rgb(${r},${g},${b})`;
+        const conf = z.data_confidence ? '' : ' ⚠';
+        return `<div class="heat-cell" style="background:${bg}">
+          ${z.visit_frequency.toFixed(0)}<div class="heat-zone">${z.zone_id}${conf}</div>
+        </div>`;
+      }).join('');
+    }
+
+    // ── Anomalies ──
+    const an = data.anomalies;
+    const al = document.getElementById('anomaly-list');
+    if (an && an.anomalies && an.anomalies.length > 0) {
+      al.innerHTML = an.anomalies.map(a => `
+        <div class="anomaly-item ${a.severity}">
+          <div class="anomaly-type" style="color:${a.severity==='CRITICAL'?'#ef4444':a.severity==='WARN'?'#f59e0b':'#3b82f6'}">${a.severity} · ${a.anomaly_type}</div>
+          <div class="anomaly-desc">${a.description}</div>
+          <div class="anomaly-action">→ ${a.suggested_action}</div>
+        </div>`).join('');
+    } else {
+      al.innerHTML = '<div class="no-data">No active anomalies</div>';
+    }
+  }
+
+  connect();
+</script>
+</body>
+</html>

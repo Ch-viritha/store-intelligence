@@ -1,0 +1,29 @@
+{
+  "stores": [
+    {
+      "store_id": "ST1008",
+      "store_name": "Brigade_Bangalore",
+      "city": "Bangalore",
+      "address": "Brigade Road, Bangalore",
+      "open_hours": { "open": "10:00", "close": "22:00" },
+      "cameras": [
+        { "camera_id": "CAM_ENTRY_01", "file": "CAM 1.mp4", "type": "entry_exit", "zones_covered": ["ENTRY_ZONE", "EXIT_ZONE"] },
+        { "camera_id": "CAM_FLOOR_01", "file": "CAM 2.mp4", "type": "main_floor", "zones_covered": ["SKINCARE", "MAKEUP", "HAIRCARE"] },
+        { "camera_id": "CAM_FLOOR_02", "file": "CAM 3.mp4", "type": "main_floor", "zones_covered": ["PERSONAL_CARE", "BATH_BODY", "FRAGRANCE"] },
+        { "camera_id": "CAM_BILLING_01", "file": "CAM 4.mp4", "type": "billing", "zones_covered": ["BILLING_COUNTER"] },
+        { "camera_id": "CAM_OVERVIEW_01", "file": "CAM 5.mp4", "type": "overview", "zones_covered": ["SKINCARE", "MAKEUP", "HAIRCARE", "PERSONAL_CARE"] }
+      ],
+      "zones": [
+        { "zone_id": "ENTRY_ZONE",     "sku_zone": null,           "type": "entry_exit" },
+        { "zone_id": "EXIT_ZONE",      "sku_zone": null,           "type": "entry_exit" },
+        { "zone_id": "SKINCARE",       "sku_zone": "SKINCARE",     "type": "product" },
+        { "zone_id": "MAKEUP",         "sku_zone": "MAKEUP",       "type": "product" },
+        { "zone_id": "HAIRCARE",       "sku_zone": "HAIRCARE",     "type": "product" },
+        { "zone_id": "PERSONAL_CARE",  "sku_zone": "PERSONAL_CARE","type": "product" },
+        { "zone_id": "BATH_BODY",      "sku_zone": "BATH_BODY",    "type": "product" },
+        { "zone_id": "FRAGRANCE",      "sku_zone": "FRAGRANCE",    "type": "product" },
+        { "zone_id": "BILLING_COUNTER","sku_zone": null,           "type": "billing" }
+      ]
+    }
+  ]
+}

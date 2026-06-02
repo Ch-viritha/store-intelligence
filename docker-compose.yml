@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: store-intelligence-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - DATABASE_URL=sqlite+aiosqlite:///./data/store_intelligence.db
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.dashboard
+    container_name: store-intelligence-dashboard
+    ports:
+      - "3000:3000"
+    environment:
+      - API_BASE_URL=http://api:8000
+      - STORE_ID=ST1008
+      - POLL_INTERVAL_SEC=5
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
