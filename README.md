@@ -10,7 +10,7 @@ web dashboard.
 
 ```bash
 # 1. Clone the repository
-git clone <your-repo-url> store-intelligence && cd store-intelligence
+git clone https://github.com/Ch-viritha/store-intelligence.git store-intelligence && cd store-intelligence
 
 # 2. Add your footage and data files
 cp /path/to/footage/*.mp4 data/footage/
