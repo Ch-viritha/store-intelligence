@@ -31,7 +31,7 @@ def make_event(
 ) -> dict:
     return {
         "event_id": event_id or str(uuid.uuid4()),
-        "store_id": "ST1008",
+        "store_id": "STORE_BLR_002",
         "camera_id": "CAM_ENTRY_01",
         "visitor_id": visitor_id or ("VIS_" + uuid.uuid4().hex[:8]),
         "event_type": event_type,
@@ -117,7 +117,7 @@ class TestMetricsEndpoint:
     async def test_empty_store_returns_zeros_not_null(self):
         """Empty store must return 0 visitors and 0.0 rates — must not crash or return null."""
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-            resp = await ac.get("/stores/ST1008/metrics")
+            resp = await ac.get("/stores/STORE_BLR_002/metrics")
         assert resp.status_code == 200
         body = resp.json()
         assert body["unique_visitors"] == 0
@@ -134,7 +134,7 @@ class TestMetricsEndpoint:
         ]
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             await ac.post("/events/ingest", json={"events": events})
-            resp = await ac.get("/stores/ST1008/metrics")
+            resp = await ac.get("/stores/STORE_BLR_002/metrics")
         assert resp.json()["unique_visitors"] == 1
 
     async def test_reentry_does_not_double_count_visitor(self):
@@ -149,7 +149,7 @@ class TestMetricsEndpoint:
         ]
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             await ac.post("/events/ingest", json={"events": events})
-            resp = await ac.get("/stores/ST1008/metrics")
+            resp = await ac.get("/stores/STORE_BLR_002/metrics")
         assert resp.json()["unique_visitors"] == 1
 
     async def test_zero_purchase_store_no_crash(self):
@@ -157,14 +157,14 @@ class TestMetricsEndpoint:
         events = [make_event(event_type="ENTRY", visitor_id=f"VIS_{i}") for i in range(5)]
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             await ac.post("/events/ingest", json={"events": events})
-            resp = await ac.get("/stores/ST1008/metrics")
+            resp = await ac.get("/stores/STORE_BLR_002/metrics")
         assert resp.status_code == 200
         assert resp.json()["conversion_rate"] == 0.0
         assert resp.json()["abandonment_rate"] == 0.0
 
     async def test_metrics_response_has_all_required_fields(self):
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-            resp = await ac.get("/stores/ST1008/metrics")
+            resp = await ac.get("/stores/STORE_BLR_002/metrics")
         keys = resp.json().keys()
         for k in ("store_id", "as_of", "unique_visitors", "conversion_rate",
                    "avg_dwell_per_zone", "current_queue_depth", "abandonment_rate"):
@@ -180,7 +180,7 @@ class TestMetricsEndpoint:
         ]
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             await ac.post("/events/ingest", json={"events": events})
-            resp = await ac.get("/stores/ST1008/metrics")
+            resp = await ac.get("/stores/STORE_BLR_002/metrics")
         assert resp.json()["unique_visitors"] == 1
 
 
@@ -191,14 +191,14 @@ class TestFunnelEndpoint:
 
     async def test_funnel_has_all_four_stages(self):
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-            resp = await ac.get("/stores/ST1008/funnel")
+            resp = await ac.get("/stores/STORE_BLR_002/funnel")
         assert resp.status_code == 200
         stage_names = {s["stage"] for s in resp.json()["stages"]}
         assert {"Entry", "Zone Visit", "Billing Queue", "Purchase"} == stage_names
 
     async def test_funnel_drop_off_pct_non_negative(self):
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-            resp = await ac.get("/stores/ST1008/funnel")
+            resp = await ac.get("/stores/STORE_BLR_002/funnel")
         for stage in resp.json()["stages"]:
             assert stage["drop_off_pct"] >= 0.0
 
@@ -206,7 +206,7 @@ class TestFunnelEndpoint:
         events = [make_event(event_type="ENTRY", visitor_id=f"VIS_{i}") for i in range(4)]
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             await ac.post("/events/ingest", json={"events": events})
-            funnel_resp = await ac.get("/stores/ST1008/funnel")
+            funnel_resp = await ac.get("/stores/STORE_BLR_002/funnel")
         entry_stage = next(
             s for s in funnel_resp.json()["stages"] if s["stage"] == "Entry"
         )

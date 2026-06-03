@@ -2,7 +2,7 @@
 
 ## Architecture Overview
 
-This system converts raw CCTV footage from Purplle's Brigade Road, Bangalore store (ST1008)
+This system converts raw CCTV footage from Purplle's Brigade Road, Bangalore store (STORE_BLR_002)
 into a live analytics API. The pipeline has four stages that connect end-to-end:
 
 ```

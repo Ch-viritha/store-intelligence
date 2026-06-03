@@ -29,7 +29,7 @@ def make_event(
     ts = datetime.now(timezone.utc) - timedelta(minutes=minutes_ago)
     return {
         "event_id": str(uuid.uuid4()),
-        "store_id": "ST1008",
+        "store_id": "STORE_BLR_002",
         "camera_id": "CAM_BILLING_01",
         "visitor_id": visitor_id or ("VIS_" + uuid.uuid4().hex[:8]),
         "event_type": event_type,
@@ -50,7 +50,7 @@ class TestAnomalyDetection:
     async def test_empty_store_returns_empty_list_not_error(self):
         """Empty store must return anomalies: [] — no crash, no false positives."""
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-            resp = await ac.get("/stores/ST1008/anomalies")
+            resp = await ac.get("/stores/STORE_BLR_002/anomalies")
         assert resp.status_code == 200
         body = resp.json()
         assert isinstance(body["anomalies"], list)
@@ -71,7 +71,7 @@ class TestAnomalyDetection:
         ]
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             await ac.post("/events/ingest", json={"events": events})
-            resp = await ac.get("/stores/ST1008/anomalies")
+            resp = await ac.get("/stores/STORE_BLR_002/anomalies")
         queue_anomalies = [
             a for a in resp.json()["anomalies"]
             if a["anomaly_type"] == "BILLING_QUEUE_SPIKE"
@@ -93,7 +93,7 @@ class TestAnomalyDetection:
         ]
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             await ac.post("/events/ingest", json={"events": events})
-            resp = await ac.get("/stores/ST1008/anomalies")
+            resp = await ac.get("/stores/STORE_BLR_002/anomalies")
         queue_anomalies = [
             a for a in resp.json()["anomalies"]
             if a["anomaly_type"] == "BILLING_QUEUE_SPIKE"
@@ -115,7 +115,7 @@ class TestAnomalyDetection:
         ]
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             await ac.post("/events/ingest", json={"events": events})
-            resp = await ac.get("/stores/ST1008/anomalies")
+            resp = await ac.get("/stores/STORE_BLR_002/anomalies")
         for anomaly in resp.json()["anomalies"]:
             assert anomaly.get("suggested_action"), \
                 f"Anomaly {anomaly['anomaly_type']} missing suggested_action"
@@ -133,7 +133,7 @@ class TestAnomalyDetection:
         ]
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             await ac.post("/events/ingest", json={"events": events})
-            resp = await ac.get("/stores/ST1008/anomalies")
+            resp = await ac.get("/stores/STORE_BLR_002/anomalies")
         for anomaly in resp.json()["anomalies"]:
             assert anomaly["severity"] in ("INFO", "WARN", "CRITICAL")
 
@@ -146,7 +146,7 @@ class TestAnomalyDetection:
         )
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             await ac.post("/events/ingest", json={"events": [old_event]})
-            resp = await ac.get("/stores/ST1008/anomalies")
+            resp = await ac.get("/stores/STORE_BLR_002/anomalies")
         dead_zones = [
             a for a in resp.json()["anomalies"]
             if a["anomaly_type"] == "DEAD_ZONE"
@@ -164,7 +164,7 @@ class TestAnomalyDetection:
         )
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             await ac.post("/events/ingest", json={"events": [recent_event]})
-            resp = await ac.get("/stores/ST1008/anomalies")
+            resp = await ac.get("/stores/STORE_BLR_002/anomalies")
         makeup_dead = [
             a for a in resp.json()["anomalies"]
             if a["anomaly_type"] == "DEAD_ZONE" and "MAKEUP" in a["description"]
@@ -174,7 +174,7 @@ class TestAnomalyDetection:
     async def test_anomaly_response_has_required_fields(self):
         """Anomaly response must have store_id, as_of, and anomalies list."""
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-            resp = await ac.get("/stores/ST1008/anomalies")
+            resp = await ac.get("/stores/STORE_BLR_002/anomalies")
         body = resp.json()
         assert "store_id" in body
         assert "as_of" in body
@@ -193,7 +193,7 @@ class TestAnomalyDetection:
         ]
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             await ac.post("/events/ingest", json={"events": events})
-            resp = await ac.get("/stores/ST1008/anomalies")
+            resp = await ac.get("/stores/STORE_BLR_002/anomalies")
         for anomaly in resp.json()["anomalies"]:
             assert "anomaly_id" in anomaly
             assert len(anomaly["anomaly_id"]) > 0

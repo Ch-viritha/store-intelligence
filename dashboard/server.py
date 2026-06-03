@@ -17,7 +17,7 @@ from fastapi.responses import HTMLResponse
 log = logging.getLogger("dashboard")
 
 API_BASE = os.getenv("API_BASE_URL", "http://api:8000")
-STORE_ID = os.getenv("STORE_ID", "ST1008")
+STORE_ID = os.getenv("STORE_ID", "STORE_BLR_002")
 POLL_INTERVAL = int(os.getenv("POLL_INTERVAL_SEC", "5"))
 
 STATIC_DIR = Path(__file__).parent / "static"

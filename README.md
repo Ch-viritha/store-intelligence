@@ -41,7 +41,7 @@ python pipeline/detect.py \
   --layout data/store_layout.json \
   --pos data/pos_transactions.csv \
   --output data/events.jsonl \
-  --store-id ST1008 \
+  --store-id STORE_BLR_002 \
   --clip-start 2026-04-10T10:00:00Z
 ```
 
@@ -79,7 +79,7 @@ bash pipeline/run.sh --api-url http://localhost:8000
 
 **Example:**
 ```bash
-curl http://localhost:8000/stores/ST1008/metrics | python -m json.tool
+curl http://localhost:8000/stores/STORE_BLR_002/metrics | python -m json.tool
 curl http://localhost:8000/health
 ```
 
@@ -127,7 +127,7 @@ store-intelligence/
 │   ├── DESIGN.md        # Architecture + AI-assisted decisions
 │   └── CHOICES.md       # 3 key decisions with full reasoning
 ├── data/
-│   ├── store_layout.json   # Zone definitions for ST1008
+│   ├── store_layout.json   # Zone definitions for STORE_BLR_002
 │   ├── pos_transactions.csv # POS data (derived from real store data)
 │   └── footage/            # Place CCTV mp4 files here
 ├── docker-compose.yml
@@ -154,7 +154,7 @@ See `docs/CHOICES.md` for model selection, schema design, and API architecture r
 ## Data Sources
 
 This submission uses real Purplle store data:
-- Store: **ST1008 Brigade_Bangalore** (Brigade Road, Bangalore)
+- Store: **STORE_BLR_002 Brigade_Bangalore** (Brigade Road, Bangalore)
 - POS data: 24 real transactions from 10-Apr-2026 (12:15–21:39)
 - CCTV: 5 cameras (CAM1–CAM5), ~680MB total footage
 

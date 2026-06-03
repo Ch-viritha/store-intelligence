@@ -349,7 +349,7 @@ def main():
     parser.add_argument("--layout", required=True, help="Path to store_layout.json")
     parser.add_argument("--pos", required=True, help="Path to pos_transactions.csv")
     parser.add_argument("--output", required=True, help="Output .jsonl file for events")
-    parser.add_argument("--store-id", default="ST1008")
+    parser.add_argument("--store-id", default="STORE_BLR_002")
     parser.add_argument("--clip-start", default="2026-04-10T10:00:00Z",
                         help="ISO-8601 UTC start time of clips")
     parser.add_argument("--api-url", default=None,

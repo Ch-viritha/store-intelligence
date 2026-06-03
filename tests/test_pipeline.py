@@ -34,7 +34,7 @@ def solid_frame(h: int = 100, w: int = 50, colour: tuple = (100, 150, 200)) -> n
 
 def base_event(**kwargs) -> dict:
     defaults = dict(
-        store_id="ST1008",
+        store_id="STORE_BLR_002",
         camera_id="CAM_ENTRY_01",
         visitor_id="VIS_abc12345",
         event_type="ENTRY",
@@ -60,7 +60,7 @@ class TestBuildEvent:
     def test_event_ids_are_unique_across_100_calls(self):
         ids = {
             build_event(
-                store_id="ST1008", camera_id="CAM_ENTRY_01", visitor_id="VIS_x",
+                store_id="STORE_BLR_002", camera_id="CAM_ENTRY_01", visitor_id="VIS_x",
                 event_type="ENTRY", timestamp=datetime.now(timezone.utc),
                 zone_id=None, dwell_ms=0, is_staff=False, confidence=0.9, session_seq=i,
             )["event_id"]
@@ -190,20 +190,20 @@ class TestVisitorTracker:
 
     def test_empty_store_queue_depth_zero(self):
         tracker = VisitorTracker()
-        assert tracker.get_queue_depth("ST1008") == 0
+        assert tracker.get_queue_depth("STORE_BLR_002") == 0
 
     def test_queue_depth_increment_decrement(self):
         tracker = VisitorTracker()
-        tracker.increment_queue("ST1008")
-        tracker.increment_queue("ST1008")
-        assert tracker.get_queue_depth("ST1008") == 2
-        tracker.decrement_queue("ST1008")
-        assert tracker.get_queue_depth("ST1008") == 1
+        tracker.increment_queue("STORE_BLR_002")
+        tracker.increment_queue("STORE_BLR_002")
+        assert tracker.get_queue_depth("STORE_BLR_002") == 2
+        tracker.decrement_queue("STORE_BLR_002")
+        assert tracker.get_queue_depth("STORE_BLR_002") == 1
 
     def test_queue_depth_never_goes_negative(self):
         tracker = VisitorTracker()
-        tracker.decrement_queue("ST1008")  # decrement on empty store
-        assert tracker.get_queue_depth("ST1008") == 0
+        tracker.decrement_queue("STORE_BLR_002")  # decrement on empty store
+        assert tracker.get_queue_depth("STORE_BLR_002") == 0
 
     def test_all_staff_clip_visitor_ids_still_assigned(self):
         """Staff are tracked — they still get visitor_ids but is_staff=True in events."""
@@ -256,7 +256,7 @@ class TestEventEmitter:
         assert len(lines) == 1
         parsed = json.loads(lines[0])
         assert parsed["event_type"] == "ENTRY"
-        assert parsed["store_id"] == "ST1008"
+        assert parsed["store_id"] == "STORE_BLR_002"
 
     def test_emitter_count_tracks_all_emitted_events(self, tmp_path):
         out = tmp_path / "events.jsonl"
